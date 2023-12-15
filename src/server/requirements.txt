@@ -1,0 +1,5 @@
+PyJWT==2.8.0
+python-dotenv==1.0.0
+python_bcrypt==0.3.2
+sanic==23.6.0
+Sanic_Cors==2.2.0

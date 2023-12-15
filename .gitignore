@@ -1,0 +1,5 @@
+.env
+ac.sh
+certs/domain.key
+certs/domain.crt
+__pycache__
