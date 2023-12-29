@@ -55,6 +55,9 @@ class Card:
     def __repr__(self):
         return f"{self.color} {self.rank}" if self.color else self.rank
     
+    def json(self):
+        return self.__repr__()
+    
     
 class Deck:
     def __init__(self):
@@ -93,6 +96,8 @@ class Hand:
     def can_hit(self, hand: Hand, card: Card):
         return any([x.usable(card) for x in self.cards])
 
+    def json(self):
+        return [i.json() for i in self.cards]
 
 
 class Game:
@@ -112,4 +117,5 @@ class Game:
             
         self.current = random.randint(0, len(self.players))
     
-    
+    def get_cards(self, player: int):
+        return self.players[player].json()

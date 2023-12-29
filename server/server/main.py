@@ -4,12 +4,14 @@ from sanic import Request, Sanic, text
 from sanic_cors import CORS
 
 from server.auth import protected, auth, decode_token
+from server.unoapi import ws_bp
 
 load_dotenv()
 
 app = Sanic("AuthApp")
 app.config.SECRET = os.getenv("SECRET")
 app.blueprint(auth)
+app.blueprint(ws_bp)
 CORS(app)
 
 @app.get("/secret")
