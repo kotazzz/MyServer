@@ -38,8 +38,9 @@ CTYPE = {
     "WILD": "nocolor",
 }
 
-def single_card_check(top_card: Card, card: Card) -> bool:
-    return card.color==top_card.color or top_card.rank==card.rank or card.cardtype=='action_nocolor'
+def single_card_check(top_card: Card, card: Card, color: str) -> bool:
+    top_color = top_card.color or color
+    return card.color==top_color or top_card.rank==card.rank or card.cardtype=='action_nocolor'
 
 class Card:
     def __init__(
@@ -55,6 +56,7 @@ class Card:
     def __repr__(self):
         return f"{self.color} {self.rank}" if self.color else self.rank
     
+    @property
     def json(self):
         return self.__repr__()
     
@@ -62,6 +64,9 @@ class Card:
 class Deck:
     def __init__(self):
         self.deck = []
+        self.fill()
+    
+    def fill(self):
         for c in COLOR:
             for r in RANK:
                 if CTYPE[r] != 'nocolor':
@@ -72,7 +77,12 @@ class Deck:
         random.shuffle(self.deck)
         
     def deal(self):
-        return self.deck.pop()
+        
+        card = self.deck.pop()
+        if len(self.deck) == 0:
+            self.fill()
+            self.shuffle()
+        return card
     
     def __repr__(self):
         return str(self.deck)
@@ -96,8 +106,9 @@ class Hand:
     def can_hit(self, hand: Hand, card: Card):
         return any([x.usable(card) for x in self.cards])
 
+    @property
     def json(self):
-        return [i.json() for i in self.cards]
+        return [i.json for i in self.cards]
 
 
 class Game:
