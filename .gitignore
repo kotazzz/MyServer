@@ -3,3 +3,4 @@ ac.sh
 certs/domain.key
 certs/domain.crt
 __pycache__
+postgres_password.txt

@@ -7,7 +7,6 @@ WORKDIR /app
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY .env /app/
 COPY /server/ /app/server/
 
 CMD ["sanic", "server.main:app", "--port", "24551", "--host", "0.0.0.0", "--dev"]

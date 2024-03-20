@@ -3,3 +3,5 @@ python-dotenv==1.0.0
 python_bcrypt==0.3.2
 sanic==23.6.0
 Sanic_Cors==2.2.0
+asyncpg==0.29.0
+sqlalchemy==2.0.28

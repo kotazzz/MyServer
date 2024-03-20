@@ -1,28 +1,60 @@
-version: '3'
+version: "3"
 services:
-  server:
-    build:
-      context: ./server
-    ports:
-      - "127.0.0.1:24551:24551"
-    networks:
-      - mysite_network
-  client:
-    build:
-      context: ./client
-    ports:
-      - "127.0.0.1:24552:24552"
-    networks:
-      - mysite_network
-  nginx:
-    build:
-      context: .
-    ports:
-      - "24555:24555"
-    networks:
-      - mysite_network
+    nginx:
+        build:
+            context: .
+        ports:
+            - "24555:24555"
+        networks:
+            - mysite_network
+        depends_on:
+            - server
+            - client
 
+    server:
+        build:
+            context: ./server
+        ports:
+            - "24551:24551"
+        networks:
+            - mysite_network
+        environment:
+            - DOTENV_FILE=/run/secrets/dotenv
+            - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+        secrets:
+            - dotenv
+            - postgres_password
+        depends_on:
+            - postgres
+
+    client:
+        build:
+            context: ./client
+        ports:
+            - "24552:24552"
+        networks:
+            - mysite_network
+
+    postgres:
+        image: postgres:latest
+        networks:
+            - mysite_network
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+        secrets:
+            - postgres_password
 
 networks:
-  mysite_network:
-    driver: bridge
+    mysite_network:
+        driver: bridge
+
+secrets:
+    dotenv:
+        file: .env
+    postgres_password:
+        file: postgres_password.txt
+
+volumes:
+    postgres_data:

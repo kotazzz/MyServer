@@ -1,4 +1,4 @@
-import { render, h, Component} from 'preact';
+import { render, h, Component } from 'preact';
 import preactLogo from './assets/preact.svg';
 import './style.css';
 
