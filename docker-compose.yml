@@ -14,8 +14,6 @@ services:
     server:
         build:
             context: ./server
-        ports:
-            - "24551:24551"
         networks:
             - mysite_network
         environment:
@@ -30,8 +28,6 @@ services:
     client:
         build:
             context: ./client
-        ports:
-            - "24552:24552"
         networks:
             - mysite_network
 
