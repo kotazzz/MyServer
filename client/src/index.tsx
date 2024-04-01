@@ -1,72 +1,118 @@
-import { render, h, Component } from 'preact';
-import preactLogo from './assets/preact.svg';
-import './style.css';
+import { h, Component, render } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
 
-export function App() {
-    return (
-        <div>
-            <a href="https://preactjs.com" target="_blank">
-                <img src={preactLogo} alt="Preact logo" height="160" width="160" />
-            </a>
-            <h1>Get Started building Vite-powered Preact Apps </h1>
-            <section>
-                <Resource
-                    title="Test"
-                    getDescription={() => fetchData()}
-                    href="https://preactjs.com/tutorial"
-                />
-            </section>
-        </div>
-    );
-}
+function App() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [error, setError] = useState('');
 
-async function fetchData() {
-    try {
-        const response = await fetch('https://kotaz.ddnsfree.com:24555/api/test');
-        const data = await response.text();
-        return data;
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        return 'Error fetching data'; // Значение по умолчанию или сообщение об ошибке
-    }
-}
-
-interface IResourceProps {
-    getDescription
-    href
-    title
-}
-
-interface IResourceState {
-    description
-}
-
-class Resource extends Component<IResourceProps, IResourceState> {
-    constructor(props) {
-        super(props);
-        this.state = {
-            description: 'Loading...',
+    // Проверка токена при загрузке страницы
+    useEffect(() => {
+        const checkToken = async () => {
+            try {
+                const response = await fetch('https://kotaz.ddnsfree.com:24555/api/auth/test', {
+                    credentials: 'include',
+                });
+                if (response.ok) {
+                    setIsLoggedIn(true);
+                } else {
+                    setIsLoggedIn(false);
+                }
+            } catch (error) {
+                console.error('Ошибка сети:', error);
+            }
         };
-    }
 
-    getDescription() {
-        return "No description";
-    }
+        checkToken();
+    }, []);
 
-    componentDidMount() {
-        this.props.getDescription().then(result => {
-            this.setState({ description: result });
-        });
-    }
+    const handleLoginOrRegister = async (url, data) => {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+                credentials: 'include',
+            });
 
-    render() {
+            const result = await response.json();
+
+            if (response.ok) {
+                setIsLoggedIn(true);
+                setError('');
+            } else {
+                setError(result.message);
+            }
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+            setError(error.message);
+        }
+    };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        const url = event.target.id === 'loginForm' ? 'https://kotaz.ddnsfree.com:24555/api/auth/login' : 'https://kotaz.ddnsfree.com:24555/api/auth/register';
+        handleLoginOrRegister(url, data);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await fetch('https://kotaz.ddnsfree.com:24555/api/auth/logout', {
+                credentials: 'include',
+            });
+            setIsLoggedIn(false);
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+        }
+    };
+
+    const handleSecret = async () => {
+        try {
+            const response = await fetch('https://kotaz.ddnsfree.com:24555/api/secret', {
+                credentials: 'include',
+            });
+
+            if (response.ok) {
+                const result = await response.text();
+                alert(result);
+            } else {
+                setIsLoggedIn(false);
+            }
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+            setIsLoggedIn(false);
+        }
+    };
+
+    if (!isLoggedIn) {
         return (
-            <a href={this.props.href} target="_blank" class="resource">
-                <h2>{this.props.title}</h2>
-                <p>{this.state.description}</p>
-            </a>
+            <div>
+                <h1>Авторизация</h1>
+                {error && <div className="error">{error}</div>}
+                <form id="loginForm" onSubmit={handleSubmit}>
+                    <input type="text" name="username" placeholder="Имя пользователя" required /><br />
+                    <input type="password" name="password" placeholder="Пароль" required /><br />
+                    <button type="submit">Вход</button>
+                </form>
+                <form id="registrationForm" onSubmit={handleSubmit}>
+                    <input type="text" name="username" placeholder="Имя пользователя" required /><br />
+                    <input type="password" name="password" placeholder="Пароль" required /><br />
+                    <button type="submit">Регистрация</button>
+                </form>
+            </div>
         );
     }
+
+    return (
+        <div>
+            <h1>Добро пожаловать!</h1>
+            <button onClick={handleSecret}>Получить секрет</button>
+            <button onClick={handleLogout}>Выход</button>
+        </div>
+    );
 }
 
 render(<App />, document.getElementById('app'));

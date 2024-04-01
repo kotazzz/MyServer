@@ -24,12 +24,26 @@ services:
             - postgres_password
         depends_on:
             - postgres
+            
+        develop:
+            watch:
+                - action: sync
+                  path: ./server
+                  target: /app
 
     client:
         build:
             context: ./client
         networks:
             - mysite_network
+        develop:
+            watch:
+                - action: sync
+                  path: ./client
+                  target: /app
+                - action: rebuild
+                  path: package.json 
+
 
     postgres:
         image: postgres:latest

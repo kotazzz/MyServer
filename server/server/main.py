@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from sanic import Request, Sanic, text
+from sanic import Request, Sanic, Websocket, text
 from sanic_cors import CORS  # type: ignore
 from server.auth import auth, decode_token, protected
 from server.models import Base
@@ -45,4 +45,10 @@ async def secret(request: Request):
 
 @app.get("/test")
 async def test(request: Request):
-    return text("Hi!")
+    return text("Hi!?")
+
+
+@app.websocket("/feed")
+async def feed(request: Request, ws: Websocket):
+    async for msg in ws:
+        await ws.send(msg if msg else "NoData")
