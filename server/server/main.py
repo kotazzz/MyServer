@@ -5,12 +5,13 @@ from sanic import Request, Sanic, Websocket, text
 from sanic_cors import CORS  # type: ignore
 from server.auth import auth, decode_token, protected
 from server.models import Base
+from server.messanger.api import api
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 load_dotenv(os.getenv("DOTENV_FILE"))
 
 
-app = Sanic("AuthApp")
+app = Sanic("App")
 app.config.SECRET = os.getenv("SECRET")
 CORS(app)
 
@@ -35,20 +36,5 @@ async def attach_db(app: Sanic, loop):
 
 
 app.blueprint(auth)
+app.blueprint(api)
 
-
-@app.get("/secret")
-@protected()
-async def secret(request: Request):
-    return text(f"To go fast, you must be fast. {decode_token(request)}")
-
-
-@app.get("/test")
-async def test(request: Request):
-    return text("Hi!?")
-
-
-@app.websocket("/feed")
-async def feed(request: Request, ws: Websocket):
-    async for msg in ws:
-        await ws.send(msg if msg else "NoData")

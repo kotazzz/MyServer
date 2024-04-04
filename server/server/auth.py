@@ -180,13 +180,13 @@ async def do_login(request: Request):
     return FAIL
 
 
-@protected()
 @auth.post("/test")
+@protected()
 async def do_test(request: Request):
     return create_success("Success")
 
 
-@protected()
+
 @auth.post("/logout")
 async def do_logout(request: Request):
     return create_token_response("")

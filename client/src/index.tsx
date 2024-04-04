@@ -1,118 +1,171 @@
-import { h, Component, render } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { render, createContext } from "preact";
+import { useContext, useEffect, useState } from "preact/hooks";
 
-function App() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [error, setError] = useState('');
+const MyContext = createContext(null);
 
-    // Проверка токена при загрузке страницы
-    useEffect(() => {
-        const checkToken = async () => {
-            try {
-                const response = await fetch('https://kotaz.ddnsfree.com:24555/api/auth/test', {
-                    credentials: 'include',
-                });
-                if (response.ok) {
-                    setIsLoggedIn(true);
-                } else {
-                    setIsLoggedIn(false);
-                }
-            } catch (error) {
-                console.error('Ошибка сети:', error);
-            }
-        };
+const apiInfo = {
+  base: "https://kotaz.ddnsfree.com:24555/api/",
+  endpoints: {
+    login: "auth/login",
+    test: "auth/test",
+    register: "auth/register",
+    logout: "auth/logout",
+  },
+};
 
-        checkToken();
-    }, []);
-
-    const handleLoginOrRegister = async (url, data) => {
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-                credentials: 'include',
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                setIsLoggedIn(true);
-                setError('');
-            } else {
-                setError(result.message);
-            }
-        } catch (error) {
-            console.error('Ошибка сети:', error);
-            setError(error.message);
-        }
-    };
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-        const url = event.target.id === 'loginForm' ? 'https://kotaz.ddnsfree.com:24555/api/auth/login' : 'https://kotaz.ddnsfree.com:24555/api/auth/register';
-        handleLoginOrRegister(url, data);
-    };
-
-    const handleLogout = async () => {
-        try {
-            await fetch('https://kotaz.ddnsfree.com:24555/api/auth/logout', {
-                credentials: 'include',
-            });
-            setIsLoggedIn(false);
-        } catch (error) {
-            console.error('Ошибка сети:', error);
-        }
-    };
-
-    const handleSecret = async () => {
-        try {
-            const response = await fetch('https://kotaz.ddnsfree.com:24555/api/secret', {
-                credentials: 'include',
-            });
-
-            if (response.ok) {
-                const result = await response.text();
-                alert(result);
-            } else {
-                setIsLoggedIn(false);
-            }
-        } catch (error) {
-            console.error('Ошибка сети:', error);
-            setIsLoggedIn(false);
-        }
-    };
-
-    if (!isLoggedIn) {
-        return (
-            <div>
-                <h1>Авторизация</h1>
-                {error && <div className="error">{error}</div>}
-                <form id="loginForm" onSubmit={handleSubmit}>
-                    <input type="text" name="username" placeholder="Имя пользователя" required /><br />
-                    <input type="password" name="password" placeholder="Пароль" required /><br />
-                    <button type="submit">Вход</button>
-                </form>
-                <form id="registrationForm" onSubmit={handleSubmit}>
-                    <input type="text" name="username" placeholder="Имя пользователя" required /><br />
-                    <input type="password" name="password" placeholder="Пароль" required /><br />
-                    <button type="submit">Регистрация</button>
-                </form>
-            </div>
-        );
-    }
-
-    return (
-        <div>
-            <h1>Добро пожаловать!</h1>
-            <button onClick={handleSecret}>Получить секрет</button>
-            <button onClick={handleLogout}>Выход</button>
-        </div>
-    );
+function api(endpoint) {
+  return apiInfo.base + endpoint;
 }
 
-render(<App />, document.getElementById('app'));
+function WelcomeMessage() {
+  return (
+    <div>
+      <h1>Welcome to My App</h1>
+      <p>This is a Preact component!</p>
+    </div>
+  );
+}
+
+const Messenger = (props) => {
+  const context = useContext(MyContext);
+
+  const logout = async () => {
+    try {
+      await fetch(api(apiInfo.endpoints.logout), {
+        credentials: "include",
+        method: "POST",
+      });
+      context.setIsLoggedIn(false);
+    } catch (error) {
+      console.error("Ошибка сети:", error);
+    }
+  };
+
+  return (
+    <div>
+      <WelcomeMessage />
+      <button onClick={logout}>Выйти</button>
+    </div>
+  );
+};
+
+const Login = (props) => {
+  const context = useContext(MyContext);
+  const [error, setError] = useState("");
+
+  const handleLoginOrRegister = async (url, data) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        context.setIsLoggedIn(true);
+        setError("");
+      } else {
+        setError(result.message);
+      }
+    } catch (error) {
+      console.error("Ошибка сети:", error);
+      setError(error.message);
+    }
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    const url =
+      event.target.id === "loginForm"
+        ? api(apiInfo.endpoints.login)
+        : api(apiInfo.endpoints.register);
+    handleLoginOrRegister(url, data);
+  };
+
+  return (
+    <div>
+      <h1>Авторизация</h1>
+      {error && <div className="error">{error}</div>}
+      <LoginForm handleSubmit={handleSubmit} />
+      <RegistrationForm handleSubmit={handleSubmit} />
+    </div>
+  );
+};
+
+const LoginForm = ({ handleSubmit }) => (
+  <form id="loginForm" onSubmit={handleSubmit}>
+    <input
+      type="text"
+      name="username"
+      placeholder="Имя пользователя"
+      required
+    />
+    <br />
+    <input
+      type="password"
+      name="password"
+      placeholder="Пароль"
+      required
+    />
+    <br />
+    <button type="submit">Вход</button>
+  </form>
+);
+
+const RegistrationForm = ({ handleSubmit }) => (
+  <form id="registrationForm" onSubmit={handleSubmit}>
+    <input
+      type="text"
+      name="username"
+      placeholder="Имя пользователя"
+      required
+    />
+    <br />
+    <input
+      type="password"
+      name="password"
+      placeholder="Пароль"
+      required
+    />
+    <br />
+    <button type="submit">Регистрация</button>
+  </form>
+);
+
+
+
+const App = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    checkToken();
+  }, []);
+
+  const checkToken = async () => {
+    try {
+      const response = await fetch(api(apiInfo.endpoints.test), {
+        credentials: "include",
+        method: "POST",
+      });
+      setIsLoggedIn(response.ok);
+    } catch (error) {
+      console.error("Ошибка сети:", error);
+    }
+  };
+
+
+  return (
+    <MyContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+      {isLoggedIn ? <Messenger /> : <Login />}
+    </MyContext.Provider>
+  );
+};
+
+render(<App />, document.getElementById("app"));
